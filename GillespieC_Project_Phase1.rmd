@@ -1,0 +1,141 @@
+---
+output:
+  word_document: default
+  html_document: default
+---
+
+## BAN502 Project - Phase 1
+
+### Gillespie, Chelsi
+
+```{r}
+#libraries and dataset
+library(tidyverse)
+library(tidyr)
+library(skimr)
+library(naniar)
+library(GGally)
+library(readr)
+train <- read_csv("train.csv")
+```
+
+```{r}
+#examine data
+str(train)
+summary(train)
+nrow(train)
+```
+
+```{r}
+#deal with missingness
+skim(train)
+gg_miss_var(train)
+gg_miss_fct(x = train, fct = failure)
+```
+
+```{r}
+#drop missing data
+train = train %>% drop_na()
+skim(train)
+str(train)
+```
+
+```{r}
+#bar chart for failures Overall
+ggplot(train, aes(x = failure, fill = failure)) + geom_bar(stat = "Count") +
+  geom_text(stat = "count", aes(label = ..count..), vjust = -0.3, size = 3) +
+  labs(title = "Count of Failures", x = "Failure") +
+  scale_fill_manual(values = c("#669933", "#e06666")) + theme_minimal() +
+   theme(
+    axis.title.y = element_blank(),
+    axis.text.y  = element_blank(), 
+    axis.ticks.y = element_blank(),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.background = element_blank())
+```
+
+```{r}
+# Percentages of product code failure
+train_percent <- train %>%
+  count(product_code, failure) %>%
+  group_by(product_code) %>%
+  mutate(perc = round(100 * n / sum(n), 1))
+
+# Bar chart for percentage of product code failure
+ggplot(train_percent, aes(x = product_code, y = n, fill = failure)) +
+  geom_col() +
+  geom_text(aes(label = paste0(perc, "%")),
+            position = position_stack(vjust = 0.5),
+            color = "black",
+            size = 4) +
+  scale_fill_manual(values = c("#669933", "#e06666")) +
+  labs(title = "Failure Ratio by Product", x = "Product", y = "Count") +
+  theme_minimal() + 
+  theme(
+    axis.title.y = element_blank(),
+    axis.text.y  = element_blank(), 
+    axis.ticks.y = element_blank(),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.background = element_blank())
+
+#boxplot for product codes
+ggplot(train, aes(x = product_code, y = failure)) +
+  geom_density() +
+   scale_fill_manual(values = c("No" = "#669933", "Yes" = "#e06666")) +
+  labs(title = "Product Code Failure", x = "Failure", y = "Product Code") +
+  theme_minimal()
+```
+
+```{r}
+
+# Histogram for percentage of loading failure
+ggplot(train, aes(x = loading, fill = failure)) +
+  geom_histogram(position = "dodge") + 
+  scale_fill_manual(values = c("#669933", "#e06666"))
+  labs(title = "Loading Failure", x = "Failure", y = "Loading") + theme_minimal()
+
+# Boxplot for loading failure
+ggplot(train, aes(x = failure, y = loading)) +
+  geom_boxplot() +
+   scale_fill_manual(values = c("No" = "#669933", "Yes" = "#e06666")) +
+  labs(title = "Loading Failure", x = "Failure", y = "Loading") +
+  theme_minimal()
+```
+
+```{r}
+#pivot attribute variable
+
+pivot_attribute_0_1 = pivot_longer(data = train, 
+             cols = c(attribute_0, attribute_1),
+             names_to = "attributes_0_1", 
+             values_to = "value")
+
+pivot_attribute_2_3 = pivot_longer(data = train, 
+             cols = c(attribute_2, attribute_3),
+             names_to = "attributes_2_3", 
+             values_to = "value")
+
+#bar charts with Pivot attributes 0 and 1
+ggplot(pivot_attribute_0_1, aes(x = value, fill = failure)) +
+  geom_bar(position = "dodge") +
+  facet_wrap(~ attributes_0_1, scales = "free_x") +
+  scale_fill_manual(values = c("Yes" = "#e06666", "No" = "#669933")) +
+  labs(title = "Product Failures by Attributes 0 and 1",
+       x = "Attribute Material", y = "Count") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(size = 8))
+
+#attributes 2 and 3
+ggplot(pivot_attribute_2_3, aes(x = value, fill = failure)) +
+  geom_bar(position = "dodge") +
+  facet_wrap(~ attributes_2_3, scales = "free_x") +
+  scale_fill_manual(values = c("Yes" = "#e06666", "No" = "#669933")) +
+  labs(title = "Product Failures by Attribute 2 and 3",
+       x = "Attribute Material", y = "Count") +
+  theme_minimal()
+```
+
+
+
